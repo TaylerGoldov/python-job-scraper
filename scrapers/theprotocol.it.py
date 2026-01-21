@@ -13,8 +13,8 @@ def fetch_page_playwright(url: str) -> BeautifulSoup:
             timezone_id="Europe/Warsaw"
         )
         page = context.new_page()
-        page.goto(url, wait_until="networkidle")  # download 10s
-        page.wait_for_selector('a[data-test="list-item-offer"]',state="visible", timeout=30000)
+        page.goto(url, wait_until="networkidle")
+        page.wait_for_timeout(3000) # download 10s
         html = page.content()
         soup = BeautifulSoup(html, "html.parser")
 
@@ -38,8 +38,8 @@ def parse_single_offer(card: Tag) -> dict:
     salary_tag = card.select_one('div[data-test="text-salary"]')
     salary = salary_tag.get_text(strip=True)  if salary_tag else None
 
-    location_tag = card.select_one('div[data-test="text-workModes"]')
-    location = location_tag.get_text(strip=True) if location_tag else None
+    work_mode_tag = card.select_one('div[data-test="text-workModes"]')
+    location = work_mode_tag.get_text(strip=True) if work_mode_tag else None
 
     link = card.get("href")
     if link and not link.startswith("http"):
@@ -59,7 +59,7 @@ def parse_single_offer(card: Tag) -> dict:
         "title": title,
         "company": company,
         "salary": salary,
-        "location": location,
+        "Work Mode": location,
         "link": link,
         "technologies": technologies,
         "is_quick_apply": is_quick_apply,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     soup = fetch_page_playwright(url)
     vacancies = parse_page(soup)
     print(f"Total vacancies: {len(vacancies)}")
-    for v in vacancies[:3]:
+    for v in vacancies[:50]:
         print (v)
 
 
