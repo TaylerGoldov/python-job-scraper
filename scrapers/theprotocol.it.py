@@ -18,8 +18,6 @@ def fetch_page_playwright(url: str) -> BeautifulSoup:
         html = page.content()
         soup = BeautifulSoup(html, "html.parser")
 
-        print("Длина HTML:", len(html))
-
         if soup.title:
             print("Title page:", soup.title.string.strip())
         else:
@@ -35,17 +33,23 @@ def parse_single_offer(card: Tag) -> dict:
     company_tag = card.select_one('div[data-test="text-employerName"]')
     company = company_tag.get_text(strip=True) if company_tag else None
 
+    location_tag = card.select_one('div[data-test="text-workplaces"]')
+    location = location_tag.get_text(strip=True) if location_tag else ""
+    if location and ("Oferta w wielu lokalizacjach" in location)  or ("Multiple locations offer" in location):
+        locations_tags = card.select('div[data-test="chip-location"]')
+        location = [l.get_text(strip=True) for l in locations_tags]
+
     salary_tag = card.select_one('div[data-test="text-salary"]')
     salary = salary_tag.get_text(strip=True)  if salary_tag else None
 
     work_mode_tag = card.select_one('div[data-test="text-workModes"]')
-    location = work_mode_tag.get_text(strip=True) if work_mode_tag else None
+    work_mode = work_mode_tag.get_text(strip=True) if work_mode_tag else None
 
     link = card.get("href")
     if link and not link.startswith("http"):
         link = "https://theprotocol.it" + link
 
-    technologies_tags = card.select('div[data-test="chip-technology"]')
+    technologies_tags = card.select('div[data-test="chip-expectedTechnology"]')
     technologies = [t.get_text(strip=True) for t in technologies_tags] if technologies_tags else []
 
     is_quick_apply_tag = card.select_one('span[data-test="text-quick-apply-badge"]')
@@ -58,8 +62,9 @@ def parse_single_offer(card: Tag) -> dict:
     return {
         "title": title,
         "company": company,
+        "location" : location,
         "salary": salary,
-        "Work Mode": location,
+        "Work Mode": work_mode,
         "link": link,
         "technologies": technologies,
         "is_quick_apply": is_quick_apply,
