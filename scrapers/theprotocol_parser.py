@@ -1,7 +1,9 @@
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup, Tag
 
-url = "https://theprotocol.it/filtry/python;t?sort=date"
+url_python_junior = "https://theprotocol.it/filtry/python;t/junior;p?sort=date"
+url_python_assistant = "https://theprotocol.it/filtry/python;t/assistant;p?sort=date"
+url_python_trainee = "https://theprotocol.it/filtry/python;t/trainee;p?sort=date"
 
 def fetch_page_playwright(url: str) -> BeautifulSoup:
     with sync_playwright() as p:
@@ -18,10 +20,6 @@ def fetch_page_playwright(url: str) -> BeautifulSoup:
         html = page.content()
         soup = BeautifulSoup(html, "html.parser")
 
-        if soup.title:
-            print("Title page:", soup.title.string.strip())
-        else:
-            print("Title not found")
         browser.close()
         return soup
 
@@ -52,12 +50,6 @@ def parse_single_offer(card: Tag) -> dict:
     technologies_tags = card.select('div[data-test="chip-expectedTechnology"]')
     technologies = [t.get_text(strip=True) for t in technologies_tags] if technologies_tags else []
 
-    is_quick_apply_tag = card.select_one('span[data-test="text-quick-apply-badge"]')
-    is_quick_apply = is_quick_apply_tag is not None
-
-    level_tag = card.select_one('span[data-test="content-positionLevels"]')
-    level = level_tag.get_text(strip=True) if level_tag else None
-
 
     return {
         "title": title,
@@ -67,16 +59,12 @@ def parse_single_offer(card: Tag) -> dict:
         "Work Mode": work_mode,
         "link": link,
         "technologies": technologies,
-        "is_quick_apply": is_quick_apply,
-        "level" : level
     }
 
 
 def parse_page(soup: BeautifulSoup) -> list[dict]:
 
     cards = soup.select('a[data-test="list-item-offer"],a[class="a4pzt2q"]') # find all cards
-
-    print(f"Cards found on page: {len(cards)}") #Check that we found at least something
 
     #Parse each card
     vacancies = []
@@ -87,12 +75,11 @@ def parse_page(soup: BeautifulSoup) -> list[dict]:
 
     return vacancies
 
-if __name__ == "__main__":
-    soup = fetch_page_playwright(url)
-    vacancies = parse_page(soup)
-    print(f"Total vacancies: {len(vacancies)}")
-    for v in vacancies[:50]:
-        print (v)
+def add_level_to_vacancies(vacancies: list[dict], level: str) -> list[dict]:
+    for v in vacancies:
+        v["level"] = level  # Junior, Trainee and Assistant.
+    return vacancies
+
 
 
 
