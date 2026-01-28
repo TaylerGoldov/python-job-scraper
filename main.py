@@ -40,7 +40,7 @@ def main():
             "company": v.get("company", ""),
             "location": v.get("location", ""),
             "salary": v.get("salary", ""),
-            "Work Mode": v.get("Work Mode", v.get("Work Mode", "")),
+            "Work Mode": v.get("Work Mode", ""),
             "link": v.get("link", ""),
             "technologies": ", ".join(v.get("technologies", [])) if isinstance(v.get("technologies"), list) else v.get(
                 "technologies", ""),
